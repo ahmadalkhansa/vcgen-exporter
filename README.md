@@ -4,6 +4,8 @@ Vcgen-exporter is a prometheus exporter that implements [vcgencmd](https://www.r
 
 The software has been tested on Raspberry Pi 5 Model B Rev 1.0
 
+![grafana dashboard](docs/images/Raspberry\ Pi\ Dashboard\ -\ Dashboards\ -\ Grafana.png)
+
 ## Docker
 
 The exporter listens on port 8080 and export metrics at path /metrics. A docker command to launch the container:
@@ -25,7 +27,7 @@ vcgencmd clock [arm,gpu,uart,emmc]
 
 ## Prometheus Metrics
 
-This is an example of the exported metrics
+The exported metrics can be seen below and they can be visualized using [grafana dashboard](grafana.json)
 
 ```
 rpi_temp{component="soc",host="<hostname>"}49.9
@@ -73,3 +75,4 @@ rpi_throttled{state="arm frequency capped occured",host="<hostname>"}1
 rpi_throttled{state="soft temperature limit active",host="<hostname>"}0
 rpi_throttled{state="under-voltage occured",host="<hostname>"}0
 ```
+
