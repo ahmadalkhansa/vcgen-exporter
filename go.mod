@@ -1,3 +1,3 @@
-module ahmad/vcgencmd
+module github.com/ahmadalkhansa/vcgen-exporter
 
 go 1.23.0
