@@ -4,7 +4,7 @@ Vcgen-exporter is a prometheus exporter that implements [vcgencmd](https://www.r
 
 The software has been tested on Raspberry Pi 5 Model B Rev 1.0
 
-![grafana dashboard](docs/images/Raspberry Pi Dashboard - Dashboards - Grafana.png)
+![grafana dashboard](docs/images/RaspberryPi-Dashboard-Grafana.png)
 
 ## Docker
 
