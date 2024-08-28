@@ -10,7 +10,7 @@ The software has been tested on Raspberry Pi 5 Model B Rev 1.0
 
 The exporter listens on port 8080 and export metrics at path /metrics. A docker command to launch the container:
 
-`docker run -p 8080:8080 --privileged 2281995/vcgen-exporter`
+`docker run -p 8080:8080 --privileged docker.io/2281995/vcgen-exporter`
 
 ## Supported Commands
 
