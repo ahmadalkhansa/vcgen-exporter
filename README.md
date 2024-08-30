@@ -4,6 +4,11 @@ Vcgen-exporter is a prometheus exporter that implements [vcgencmd](https://www.r
 
 The software has been tested on Raspberry Pi 5 Model B Rev 1.0
 
+| Model                          | Notes                                    |
+|--------------------------------|------------------------------------------|
+| Raspberry Pi 5 Model B Rev 1.0 |                                          |
+| Raspberry Pi 4 Model B Rev 1.2 | does not support `pmic_read_adc command` |
+
 ![grafana dashboard](https://github.com/ahmadalkhansa/vcgen-exporter/blob/main/docs/images/RaspberryPi-Dashboard-Grafana.png?raw=true)
 
 ## Docker
