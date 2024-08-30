@@ -6,6 +6,7 @@ import (
 	"os"
 	"syscall"
 	"unsafe"
+	"fmt"
 )
 
 // https://github.com/raspberrypi/utils/blob/master/vcgencmd/vcgencmd.c
@@ -28,12 +29,14 @@ const (
 	IocWrite        uintptr = 1
 	IocRead         uintptr = 2
 	MaxString               = 1024
-	Mode                    = os.FileMode(0666)
+	Mode                    = os.FileMode(0400)
 	GetGencmdResult         = 0x00030080
 )
 
 func VcComm(c string) (string, error) {
+	var errm error
 	var mbyte []uint32
+	//size, process request, tagid, buffer length, request length, error response
 	initbyte := []uint32{0, 0x00000000, GetGencmdResult, MaxString, 0, 0}
 	device, errd := os.OpenFile(DeviceFileName, os.O_RDWR, Mode)
 	if errd != nil {
@@ -43,9 +46,13 @@ func VcComm(c string) (string, error) {
 	deviceFd := device.Fd()
 	mbyte = append(mbyte, initbyte...)
 	mbyte, mbytePtr := GenVcRequest(mbyte, c)
-	erri := MboxProperty(deviceFd, mbytePtr)
+	MboxProperty(deviceFd, mbytePtr)
 	rMessage := Resp(mbyte)
-	return rMessage, erri
+	//check for response error
+	if mbyte[5] != 0 {
+		errm = fmt.Errorf("Video Core error %d", mbyte[5])
+	}
+	return rMessage, errm
 }
 
 func GenVcRequest(reqSlice []uint32, c string) ([]uint32, uintptr) {
@@ -90,16 +97,14 @@ func IOC(dir, t, nr, size uintptr) uintptr {
 		(size << IocSizeshift)
 }
 
-func MboxProperty(fd, mb uintptr) error {
+func MboxProperty(fd, mb uintptr) {
 	var Ptr *string
 	var IoctlMboxProperty uintptr
 	IoctlMboxProperty = IOWR(MajorNum, IocNrshift, unsafe.Sizeof(Ptr))
 	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd, IoctlMboxProperty, mb)
-	var err error
-	if errno != 0 {
-		err = errno
+	if errno.Error() != "errno 0" {
+		log.Fatal("IOCTL returned error ", errno.Error())
 	}
-	return err
 }
 
 /*

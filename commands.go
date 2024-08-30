@@ -11,8 +11,8 @@ import (
 var hostname, _ = os.Hostname()
 
 type command interface {
-	measure() []string
-	metric() (m string, l []string)
+	measure() ([]string, error)
+	metric() (string, []string)
 }
 
 type (
@@ -29,9 +29,10 @@ type (
 	throttle struct {}
 )
 
-func (t temp) measure() []string {
+func (t temp) measure() ([]string, error) {
 	var lcomm []string
 	var lres []string
+	var errv error
 	command := "measure_temp"
 	lcomm = append(lcomm, command)
 	if t.pmic {
@@ -42,18 +43,21 @@ func (t temp) measure() []string {
 	for _, v := range lcomm {
 		temp, err := VcComm(v)
 		if err != nil {
-			log.Fatal("IOCTL call has returned Errno ", err)
+			errv = fmt.Errorf("%s %s", v, temp)
+			log.Println(errv, err)
+			return lres, errv
 		}
 		_, temp, _ = strings.Cut(temp, "=")
 		temp, _, _ = strings.Cut(temp, "'")
 		lres = append(lres, temp)
 	}
-	return lres
+	return lres, errv
 }
 
-func (v volts) measure() []string {
+func (v volts) measure() ([]string, error) {
 	var lcomm []string
 	var lres []string
+	var errv error
 	command := "measure_volts"
 	lcomm = append(lcomm, command)
 	switch {
@@ -72,39 +76,45 @@ func (v volts) measure() []string {
 	for _, v := range lcomm {
 		volts, err := VcComm(v)
 		if err != nil {
-			log.Fatal("IOCTL call has returned Errno ", err)
+			errv = fmt.Errorf("%s %s", v, volts)
+			log.Println(err, errv)
+			return lres, errv
 		}
 		_, volts, _ = strings.Cut(volts, "=")
 		volts, _, _ = strings.Cut(volts, "V")
 		lres = append(lres, volts)
 	}
-	return lres
+	return lres, errv
 }
 
-func (p adc) measure() []string {
+func (p adc) measure() ([]string, error) {
 	command := "pmic_read_adc"
 	var lres []string
+	var errv error
 	power, err := VcComm(command)
 	if err != nil {
-		log.Fatal("IOCTL call has returned Errno ", err)
+		errv = fmt.Errorf("%s %s", command, power)
+		log.Println(err, errv)
+		return lres, errv
 	}
 	pslice := strings.Split(power, "\n")
 	for _, i := range pslice {
 		var power string
 		var found bool
 		_, power, _ = strings.Cut(i, "=")
-		power, _, found = strings.Cut(power, "V")
+		power, _, found = strings.Cut(power, "v")
 		if found != true {
-			power, _, _ = strings.Cut(power, "A")
+			power, _, _ = strings.Cut(power, "a")
 		}
 		lres = append(lres, power)
 	}
-	return lres
+	return lres, errv
 }
 
-func (c clock) measure() []string {
+func (c clock) measure() ([]string, error) {
 	var lres []string
 	var lcomm []string
+	var errv error
 	command := "measure_clock"
 	switch {
 	case c.arm:
@@ -127,18 +137,21 @@ func (c clock) measure() []string {
 		var hrtz string
 		clo, err := VcComm(v)
 		if err != nil {
-			log.Fatal("IOCTL call has returned Errno ", err)
+			errv = fmt.Errorf("%s %s", v, clo)
+			log.Println(err, errv)
+			return lres, errv
 		}
 		hrtz = strings.Split(clo, "=")[1]
 		//clean null ascii
 		hrtz = strings.ReplaceAll(hrtz, "\x00", "")
 		lres = append(lres, hrtz)
 	}
-	return lres
+	return lres, errv
 }
 
-func (o throttle) measure() []string {
+func (o throttle) measure() ([]string, error) {
 	var lres []string
+	var errv error
 	command := "get_throttled"
 	bs := make([]string, 20)
 	for i := range bs {
@@ -146,7 +159,9 @@ func (o throttle) measure() []string {
 	}
 	clo, err := VcComm(command)
 	if err != nil {
-		log.Fatal("IOCTL call has returned Errno ", err)
+		errv = fmt.Errorf("%s %s", command, clo)
+		log.Println(err, errv)
+		return lres, errv
 	}
 	//clean null ascii
 	clo = strings.ReplaceAll(clo, "\x00", "")
@@ -164,7 +179,7 @@ func (o throttle) measure() []string {
 		lres = append(lres, bs[i], bs[j])
 		j--
 	}
-	return lres
+	return lres, errv
 }
 
 func (t temp) metric() (m string, l[]string) {
@@ -197,7 +212,10 @@ func (p adc) metric() (m string, l []string) {
 	command := "pmic_read_adc"
 	power, err := VcComm(command)
 	if err != nil {
-		log.Fatal("IOCTL call has returned an Errno", err)
+		var errv error
+		errv = fmt.Errorf("%s %s", command, power)
+		log.Println(err, errv)
+		return "", lmetric
 	}
 	pslice := strings.Split(power, "\n")
 	for _, i := range pslice {
@@ -253,10 +271,13 @@ func param(l, p string) string {
 	return l + "=\"" + p + "\""
 }
 
-func PromOut(c command) string {
+func PromOut(c command) (string) {
 	var format string
 	hlabel := fmt.Sprintf("host=\"%s\"", hostname)
-	lres := c.measure()
+	lres, errm := c.measure()
+	if errm != nil {
+		return ""
+	}
 	metric, lmetric := c.metric()
 	for i := range lmetric {
 		format += metric + "{" + lmetric[i] + "," + hlabel + "}" + lres[i] + "\n"
