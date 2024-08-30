@@ -42,7 +42,7 @@ func (t temp) measure() []string {
 	for _, v := range lcomm {
 		temp, err := VcComm(v)
 		if err != nil {
-			log.Fatal("IOCTL call has returned Errno ", err)
+			log.Panic(err)
 		}
 		_, temp, _ = strings.Cut(temp, "=")
 		temp, _, _ = strings.Cut(temp, "'")
@@ -72,7 +72,7 @@ func (v volts) measure() []string {
 	for _, v := range lcomm {
 		volts, err := VcComm(v)
 		if err != nil {
-			log.Fatal("IOCTL call has returned Errno ", err)
+			log.Panic(err)
 		}
 		_, volts, _ = strings.Cut(volts, "=")
 		volts, _, _ = strings.Cut(volts, "V")
@@ -86,16 +86,16 @@ func (p adc) measure() []string {
 	var lres []string
 	power, err := VcComm(command)
 	if err != nil {
-		log.Fatal("IOCTL call has returned Errno ", err)
+		log.Panic(err)
 	}
 	pslice := strings.Split(power, "\n")
 	for _, i := range pslice {
 		var power string
 		var found bool
 		_, power, _ = strings.Cut(i, "=")
-		power, _, found = strings.Cut(power, "V")
+		power, _, found = strings.Cut(power, "v")
 		if found != true {
-			power, _, _ = strings.Cut(power, "A")
+			power, _, _ = strings.Cut(power, "a")
 		}
 		lres = append(lres, power)
 	}
@@ -127,7 +127,7 @@ func (c clock) measure() []string {
 		var hrtz string
 		clo, err := VcComm(v)
 		if err != nil {
-			log.Fatal("IOCTL call has returned Errno ", err)
+			log.Panic(err)
 		}
 		hrtz = strings.Split(clo, "=")[1]
 		//clean null ascii
@@ -146,7 +146,7 @@ func (o throttle) measure() []string {
 	}
 	clo, err := VcComm(command)
 	if err != nil {
-		log.Fatal("IOCTL call has returned Errno ", err)
+		log.Panic(err)
 	}
 	//clean null ascii
 	clo = strings.ReplaceAll(clo, "\x00", "")
@@ -197,7 +197,7 @@ func (p adc) metric() (m string, l []string) {
 	command := "pmic_read_adc"
 	power, err := VcComm(command)
 	if err != nil {
-		log.Fatal("IOCTL call has returned an Errno", err)
+		log.Panic(err)
 	}
 	pslice := strings.Split(power, "\n")
 	for _, i := range pslice {
