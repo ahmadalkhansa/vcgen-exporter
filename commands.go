@@ -102,9 +102,9 @@ func (p adc) measure() ([]string, error) {
 		var power string
 		var found bool
 		_, power, _ = strings.Cut(i, "=")
-		power, _, found = strings.Cut(power, "v")
+		power, _, found = strings.Cut(power, "V")
 		if found != true {
-			power, _, _ = strings.Cut(power, "a")
+			power, _, _ = strings.Cut(power, "A")
 		}
 		lres = append(lres, power)
 	}
