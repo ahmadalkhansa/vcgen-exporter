@@ -6,19 +6,42 @@ import (
 	"net/http"
 	"flag"
 	"strconv"
+	"strings"
 )
 
+type constructor struct {
+	metric strings.Builder
+	err error
+}
+
 var (
-	cl = temp{pmic: true}
-	vl = volts{sdramc: true, sdrami: true, sdramp: true}
-	ad = adc{}
-	ck = clock{arm: true, gpu: true, uart: true, emmc: true}
-	th = throttle{}
+	cl = temp{enabled: true, pmic: true}
+	vl = volts{enabled: true, sdramc: true, sdrami: true, sdramp: true}
+	ad = adc{enabled: true}
+	ck = clock{enabled: true, arm: true, gpu: true, uart: true, emmc: true}
+	th = throttle{enabled: true}
 )
 
 var port int
 
+func (cs *constructor) write(s string, e error) {
+	if e != nil {
+		log.Println(e)
+	}
+	_, cs.err = cs.metric.WriteString(s)
+	if cs.err != nil {
+		log.Println(cs.err)
+	}
+}
+
+
 func init() {
+	var err error
+	log.Println("testing pmic_read_adc command before initialization...")
+	if _, err = PromOut(ad); err != nil {
+		log.Println("Disabling pmic_read_adc command")
+		ad.enabled = false
+	}
 	const (
 		portDefault = 8080
 		portUsage = "Exporter's Listening port"
@@ -28,14 +51,16 @@ func init() {
 
 func main() {
 	flag.Parse()
-	sm := func(w http.ResponseWriter, _ *http.Request) {
-		var col string
-		col += PromOut(cl)
-		col += PromOut(vl)
-		col += PromOut(ad)
-		col += PromOut(ck)
-		col += PromOut(th)
-		io.WriteString(w, col)
+	log.Println("vcgen-exporter initializing...")
+	sm := func(w http.ResponseWriter, r *http.Request) {
+		var resp constructor
+		log.Printf("%s %s request to %s", r.RemoteAddr, r.Method, r.URL.RequestURI())
+		resp.write(PromOut(cl))
+		resp.write(PromOut(vl))
+		resp.write(PromOut(ad))
+		resp.write(PromOut(ck))
+		resp.write(PromOut(th))
+		io.WriteString(w, resp.metric.String())
 	}
 
 	http.HandleFunc("/metrics", sm)

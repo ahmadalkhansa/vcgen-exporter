@@ -11,23 +11,51 @@ import (
 var hostname, _ = os.Hostname()
 
 type command interface {
+	checkEnabled() bool
 	measure() ([]string, error)
 	metric() (string, []string)
 }
 
 type (
 	temp struct {
+		enabled bool
 		pmic bool
 	}
 	volts struct {
+		enabled bool
 		sdramc, sdrami, sdramp bool
 	}
-	adc   struct{}
+	adc   struct{
+		enabled bool
+	}
 	clock struct {
+		enabled bool
 		arm, gpu, uart, emmc bool
 	}
-	throttle struct {}
+	throttle struct {
+		enabled bool
+	}
 )
+
+func (t temp) checkEnabled() bool {
+	return t.enabled
+}
+
+func (v volts) checkEnabled() bool {
+	return v.enabled
+}
+
+func (p adc) checkEnabled() bool {
+	return p.enabled
+}
+
+func (c clock) checkEnabled() bool {
+	return c.enabled
+}
+
+func (o throttle) checkEnabled() bool {
+	return o.enabled
+}
 
 func (t temp) measure() ([]string, error) {
 	var lcomm []string
@@ -271,16 +299,19 @@ func param(l, p string) string {
 	return l + "=\"" + p + "\""
 }
 
-func PromOut(c command) (string) {
+func PromOut(c command) (string, error) {
+	if c.checkEnabled() == false {
+		return "", nil
+	}
 	var format string
 	hlabel := fmt.Sprintf("host=\"%s\"", hostname)
 	lres, errm := c.measure()
 	if errm != nil {
-		return ""
+		return "", errm
 	}
 	metric, lmetric := c.metric()
 	for i := range lmetric {
 		format += metric + "{" + lmetric[i] + "," + hlabel + "}" + lres[i] + "\n"
 	}
-	return format
+	return format, errm
 }
