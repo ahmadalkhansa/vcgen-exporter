@@ -6,7 +6,7 @@ RUN --mount=type=bind,source=./,target=/usr/src/app go build -buildvcs=false -v 
 
 FROM docker.io/alpine:3.20
 
-LABEL vcgen-exporter.version="v0.5.1"
+LABEL vcgen-exporter.version="v0.6.0"
 LABEL vcgen-exporter.image.author="ahmadkhansa95@gmail.com"
 
 COPY --from=base /usr/local/bin/vcgen-exporter /usr/local/bin/vcgen-exporter

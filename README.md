@@ -11,6 +11,14 @@ The software has been tested on Raspberry Pi 5 Model B Rev 1.0
 
 ![grafana dashboard](https://github.com/ahmadalkhansa/vcgen-exporter/blob/main/docs/images/RaspberryPi-Dashboard-Grafana.png?raw=true)
 
+## Usage
+
+```
+Usage of ./vcgen-exporter:
+  -p int
+    	Exporter's Listening port (default 8080)
+```
+
 ## Docker
 
 The exporter listens on port 8080 and export metrics at path /metrics. A docker command to launch the container:
