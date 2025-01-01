@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+type constructor struct {
+	metricWrite strings.Builder
+	err error
+}
+
 var (
 	cl = temp{enabled: true, pmic: true}
 	vl = volts{enabled: true, sdramc: true, sdrami: true, sdramp: true}
@@ -18,6 +23,16 @@ var (
 )
 
 var port int
+
+func (cs *constructor) write(s string, e error) {
+	if e != nil {
+		log.Panicln(e)
+	}
+	_, cs.erri = cs.metricWrite(s)
+	if cs.erri != nil {
+		log.Panicln(cs.erri)
+	}
+}
 
 func init() {
 	log.Println("vcgen-exporter initializing...")
@@ -31,28 +46,14 @@ func init() {
 func main() {
 	flag.Parse()
 	sm := func(w http.ResponseWriter, r *http.Request) {
-		var resp strings.Builder
-		var col string
-		var err error
-		var erri error
+		var resp constructor
 		log.Printf("%s %s request to %s", r.RemoteAddr, r.Method, r.URL.RequestURI())
-		col, err = PromOut(cl)
-		_, erri = resp.WriteString(col)
-		col, err = PromOut(vl)
-		_, erri = resp.WriteString(col)
-		col, err = PromOut(ad)
-		_, erri = resp.WriteString(col)
-		col, err = PromOut(ck)
-		_, erri = resp.WriteString(col)
-		col, err = PromOut(th)
-		_, erri = resp.WriteString(col)
-		if err != nil {
-			log.Println(err)
-		}
-		if erri != nil {
-			log.Println(erri)
-		}
-		io.WriteString(w, resp.String())
+		defer io.WriteString(w, resp.String())
+		resp.write(PromOut(cl))
+		resp.write(PromOut(vl))
+		resp.write(PromOut(ad))
+		resp.write(PromOut(ck))
+		resp.write(PromOut(th))
 	}
 
 	http.HandleFunc("/metrics", sm)
