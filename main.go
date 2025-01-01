@@ -34,8 +34,15 @@ func (cs *constructor) write(s string, e error) {
 	}
 }
 
+
 func init() {
-	log.Println("vcgen-exporter initializing...")
+	var err error
+	log.Println("testing pmic_read_adc command before initialization...")
+	if _, err = PromOut(ad); err != nil {
+		log.Printf("pmic_read_adc failure, %s", err.Error())
+		log.Println("Disabling pmic_read_adc command")
+		ad.enabled = false
+	}
 	const (
 		portDefault = 8080
 		portUsage = "Exporter's Listening port"
@@ -45,6 +52,7 @@ func init() {
 
 func main() {
 	flag.Parse()
+	log.Println("vcgen-exporter initializing...")
 	sm := func(w http.ResponseWriter, r *http.Request) {
 		var resp constructor
 		log.Printf("%s %s request to %s", r.RemoteAddr, r.Method, r.URL.RequestURI())
