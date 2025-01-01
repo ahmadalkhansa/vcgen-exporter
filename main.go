@@ -39,7 +39,6 @@ func init() {
 	var err error
 	log.Println("testing pmic_read_adc command before initialization...")
 	if _, err = PromOut(ad); err != nil {
-		log.Printf("pmic_read_adc failure, %s", err.Error())
 		log.Println("Disabling pmic_read_adc command")
 		ad.enabled = false
 	}
