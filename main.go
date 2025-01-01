@@ -10,7 +10,7 @@ import (
 )
 
 type constructor struct {
-	metricWrite strings.Builder
+	metric strings.Builder
 	err error
 }
 
@@ -28,9 +28,9 @@ func (cs *constructor) write(s string, e error) {
 	if e != nil {
 		log.Panicln(e)
 	}
-	_, cs.erri = cs.metricWrite(s)
-	if cs.erri != nil {
-		log.Panicln(cs.erri)
+	_, cs.err = cs.metric.WriteString(s)
+	if cs.err != nil {
+		log.Panicln(cs.err)
 	}
 }
 
@@ -48,7 +48,7 @@ func main() {
 	sm := func(w http.ResponseWriter, r *http.Request) {
 		var resp constructor
 		log.Printf("%s %s request to %s", r.RemoteAddr, r.Method, r.URL.RequestURI())
-		defer io.WriteString(w, resp.String())
+		defer io.WriteString(w, resp.metric.String())
 		resp.write(PromOut(cl))
 		resp.write(PromOut(vl))
 		resp.write(PromOut(ad))
