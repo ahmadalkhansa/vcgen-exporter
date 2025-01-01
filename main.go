@@ -48,12 +48,12 @@ func main() {
 	sm := func(w http.ResponseWriter, r *http.Request) {
 		var resp constructor
 		log.Printf("%s %s request to %s", r.RemoteAddr, r.Method, r.URL.RequestURI())
-		defer io.WriteString(w, resp.metric.String())
 		resp.write(PromOut(cl))
 		resp.write(PromOut(vl))
 		resp.write(PromOut(ad))
 		resp.write(PromOut(ck))
 		resp.write(PromOut(th))
+		io.WriteString(w, resp.metric.String())
 	}
 
 	http.HandleFunc("/metrics", sm)
