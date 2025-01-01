@@ -26,11 +26,11 @@ var port int
 
 func (cs *constructor) write(s string, e error) {
 	if e != nil {
-		log.Panicln(e)
+		log.Println(e)
 	}
 	_, cs.err = cs.metric.WriteString(s)
 	if cs.err != nil {
-		log.Panicln(cs.err)
+		log.Println(cs.err)
 	}
 }
 
