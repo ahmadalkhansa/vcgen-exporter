@@ -303,7 +303,7 @@ func PromOut(c command) (string, error) {
 	if c.checkEnabled() == false {
 		return "", nil
 	}
-	var format string
+	var format strings.Builder
 	hlabel := fmt.Sprintf("host=\"%s\"", hostname)
 	lres, errm := c.measure()
 	if errm != nil {
@@ -311,7 +311,11 @@ func PromOut(c command) (string, error) {
 	}
 	metric, lmetric := c.metric()
 	for i := range lmetric {
-		format += metric + "{" + lmetric[i] + "," + hlabel + "}" + lres[i] + "\n"
+		var err error
+		_, err = format.WriteString(metric + "{" + lmetric[i] + "," + hlabel + "}" + lres[i] + "\n")
+		if err != nil {
+			log.Printf("%s metric writing returned error: %s", metric, err.Error())
+		}
 	}
-	return format, errm
+	return format.String(), errm
 }
