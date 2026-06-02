@@ -1,5 +1,8 @@
 # Vcgen-Exporter
 
+[!NOTE]
+Further developments are going to be at https://codeberg.org/amniker/vcgen-exporter
+
 Vcgen-exporter is a prometheus exporter that implements [vcgencmd](https://www.raspberrypi.com/documentation/computers/os.html#vcgencmd).
 
 The software has been tested on Raspberry Pi 5 Model B Rev 1.0
